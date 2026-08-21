@@ -1,0 +1,49 @@
+name: "detect-secrets gate"
+description: >
+  Baseline-diffed Yelp/detect-secrets scan. Fails only on secret findings
+  that are NOT in the audited baseline, compared on (path, type, hash) —
+  deliberately not on line numbers, so code movement never fails the build.
+author: "elecnix"
+
+inputs:
+  baseline:
+    description: "Path to the audited detect-secrets baseline."
+    required: false
+    default: ".secrets.baseline"
+  detect_secrets_version:
+    description: "detect-secrets version to install (pinned; no floats)."
+    required: false
+    default: "1.5.0"
+  python_version:
+    description: "Python version used to run detect-secrets."
+    required: false
+    default: "3.12"
+
+outputs:
+  new_findings:
+    description: "Number of new untriaged findings (0 when the gate passes)."
+    value: ${{ steps.gate.outputs.new_findings }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - name: Install detect-secrets ${{ inputs.detect_secrets_version }}
+      shell: bash
+      run: pip install --quiet "detect-secrets==${{ inputs.detect_secrets_version }}"
+
+    # One gate run; the verdict goes to the job log, the count to the step
+    # output, and the gate's exit code decides the step. `set -o pipefail`
+    # plus PIPESTATUS keeps a failing gate from being masked by tee.
+    - name: Baseline-diffed scan
+      id: gate
+      shell: bash
+      run: |
+        set -o pipefail
+        python3 "$GITHUB_ACTION_PATH/gate.py" "${{ inputs.baseline }}" | tee gate.log
+        n=$(sed -n 's/^NEW findings: //p' gate.log | tail -1)
+        echo "new_findings=${n:-?}" >> "$GITHUB_OUTPUT"
+        exit ${PIPESTATUS[0]}

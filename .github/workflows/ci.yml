@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet pytest "detect-secrets==1.5.0"
+      - run: pytest test_gate.py -q
+
+  # The gate has never been seen to fail -> not tested. These drive the real
+  # gate.py against real fixture repos with a real detect-secrets install.
+  integration:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: clean-passes
+            expect: 0
+          - name: planted-secret-fails
+            expect: 1
+          - name: drift-passes
+            expect: 2
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet "detect-secrets==1.5.0"
+      - name: Build fixture repo and run the gate
+        run: python3 .github/fixtures.py "${{ matrix.expect }}"
