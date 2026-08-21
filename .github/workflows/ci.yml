@@ -42,4 +42,4 @@ jobs:
           python-version: "3.12"
       - run: pip install --quiet "detect-secrets==1.5.0"
       - name: Build fixture repo and run the gate
-        run: python3 .github/fixtures.py "${{ matrix.expect }}"
+        run: python3 .github/fixtures.py "${{ matrix.name }}"
