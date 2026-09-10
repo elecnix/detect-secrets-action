@@ -1,0 +1,37 @@
+# Flags a pull-request description that will render badly on GitHub: prose
+# hard-wrapped mid-sentence, list items broken onto a second line, collapsed
+# tables, and mermaid diagrams the mermaid parser rejects.
+#
+# Deliberately advisory — not in the branch-protection ruleset's required
+# contexts. On the action's calibration corpus it flags 11 of 94 human-authored
+# bodies, all already merged, so requiring it would redden the trunk over
+# descriptions nobody intends to rewrite. A red result is a signal to the
+# author, not a gate.
+name: pr-body-format
+
+on:
+  pull_request:
+    branches: [main]
+    # `edited` re-runs the check once the author fixes the body — without it
+    # the original red result stands.
+    types: [opened, edited, reopened, synchronize]
+
+# The action reads the body through the REST API and writes nothing back.
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-body-format-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-body-format:
+    runs-on: ubuntu-latest
+    steps:
+      # No actions/checkout — the action reads the body via the API.
+      #
+      # SHA-pinned, matching how ci.yml pins its actions. Safe here because the
+      # composite runs scripts from github.action_path and never resolves
+      # github.action_ref, so a SHA names the same code the tag does.
+      - uses: elecnix/gh-pr-body-action@16953182e3b991b7d081d844b395754fdfb91880 # v1.1.0
