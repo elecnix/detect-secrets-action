@@ -3,7 +3,7 @@ name: Duplication
 on: pull_request
 
 concurrency:
-  group: dupdelta-${{ github.event.pull_request.number }}
+  group: dupdelta-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -17,9 +17,10 @@ jobs:
         with:
           fetch-depth: 0  # the merge-base has to be reachable; a shallow clone fails the action loudly
 
-      # A tag, not a SHA like the checkout above: the action resolves its own
-      # release binary from the ref it was called with, and a SHA names no
-      # release, so pinning one would silently fall back to "latest".
+      # A tag, not a SHA like the checkout above: the action picks which
+      # release binary to download from the ref it was called with, and a SHA
+      # names no release -- so pinning one would fall back to whatever
+      # "latest" is that day, with only a ::notice:: to say so.
       - uses: elecnix/dupdelta@v0.2.0
         with:
           # The default root scan skips dot-directories, which would leave
