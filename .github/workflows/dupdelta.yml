@@ -1,0 +1,28 @@
+name: Duplication
+
+on: pull_request
+
+concurrency:
+  group: dupdelta-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dupdelta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0 (node24)
+        with:
+          fetch-depth: 0  # the merge-base has to be reachable; a shallow clone fails the action loudly
+
+      # A tag, not a SHA like the checkout above: the action picks which
+      # release binary to download from the ref it was called with, and a SHA
+      # names no release -- so pinning one would fall back to whatever
+      # "latest" is that day, with only a ::notice:: to say so.
+      - uses: elecnix/dupdelta@v0.2.0
+        with:
+          # The default root scan skips dot-directories, which would leave
+          # .github/fixtures.py -- a third of this repo's Python -- invisible.
+          paths: ". .github"
