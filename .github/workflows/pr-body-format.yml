@@ -34,4 +34,4 @@ jobs:
       # SHA-pinned, matching how ci.yml pins its actions. Safe here because the
       # composite runs scripts from github.action_path and never resolves
       # github.action_ref, so a SHA names the same code the tag does.
-      - uses: elecnix/gh-pr-body-action@16953182e3b991b7d081d844b395754fdfb91880 # v1.1.0
+      - uses: elecnix/gh-pr-body-action@08c74dc0736abe295e90d6363abd55cf7ea63ef3 # v1.2.1
