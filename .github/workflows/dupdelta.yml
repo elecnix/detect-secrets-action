@@ -21,7 +21,7 @@ jobs:
       # release binary to download from the ref it was called with, and a SHA
       # names no release -- so pinning one would fall back to whatever
       # "latest" is that day, with only a ::notice:: to say so.
-      - uses: elecnix/dupdelta@v0.2.0
+      - uses: elecnix/dupdelta@c95b985a8e9ba75c1473f2fe3695d8478f869d53 # v0.3.0
         with:
           # The default root scan skips dot-directories, which would leave
           # .github/fixtures.py -- a third of this repo's Python -- invisible.
